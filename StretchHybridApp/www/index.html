@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html ng-app="GarageApp">
+<html id="app">
     <head>
         <meta charset="utf-8" />
         <meta name="format-detection" content="telephone=no" />
@@ -13,7 +13,6 @@
         <title>Stretch Garage</title>
         <script type="text/javascript" charset="utf-8" src="js/jquery-1.10.2.min.js"></script>
         <script type="text/javascript" charset="utf-8" src="js/jquery-1.10.2.min.map"></script>
-        <script type="text/javascript" charset="utf-8" src="js/jquery-1.10.2.intellisense.js"></script>
 
         <script type="text/javascript" charset="utf-8" src="js/bootstrap.min.js"></script>
 
@@ -26,11 +25,10 @@
 
 
         <script type="text/javascript" charset="utf-8" src="js/router.js"></script>
-
         <script type="text/javascript" charset="utf-8" src="js/garage.js"></script>
         <script type="text/javascript" charset="utf-8" src="js/services.js"></script>        
     </head>
-    <body ng-controller="AppController">
+    <body id="controller" ng-controller="AppController">
         <div id="message" ng-click="close('message')" class="alert" ng-show="Messages">
             <ul>
                 <li ng-repeat="m in Messages">
@@ -45,9 +43,14 @@
                 <p>© Stretch Garage</p>
             </div>
         </div>
-
+        {{Time}}
+        {{Position}}
         <script type="text/javascript" charset="utf-8" src="cordova.js"></script>
-
-        
+        <script>
+        //document.addEventListener("deviceready", function() {
+        //    var domElement = document.getElementById('app');
+        //    angular.bootstrap(domElement, ['GarageApp'])
+        //}, false);
+        </script>        
     </body>
 </html>

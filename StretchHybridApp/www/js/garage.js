@@ -15,7 +15,7 @@
                 },
                 function (data) {
                     //error
-                    $scope.showMessage("Woops, någonting gick fel!", 2000);
+                    $scope.ShowMessage("Woops, någonting gick fel!", 2000);
                 });
         }
 
@@ -42,11 +42,12 @@
             parkingPlaces.GetParkingPlace($routeParams.id)
             .then(
                 function(data) {
+                    //success
                     $scope.ParkingPlaces = parkingPlaces.parkingPlaceList;
                 },
                 function (data) {
                     //error
-                    $scope.showMessage("Woops, någonting gick fel!", 2000);
+                    $scope.ShowMessage("Woops, någonting gick fel!", 2000);
                 });
         }
 
@@ -60,18 +61,55 @@
         $scope.init();
     }])
 
-.controller('AppController', ['$scope',
-    function ($scope) {
+.controller('AppController', ['$scope', 'GeolocationService', '$http', 
+    function ($scope, geolocation, $http) {
+        var stop;
+        var msgTimer;
         $scope.init = function () {
+            stop = $interval(function() {
+                $scope.getGeolocation();
+            }, 2000);
         }
 
+        $scope.Position;
+        $scope.getGeolocation = function() {
+            geolocation()
+            .then(
+                function(position) {
+                    //success
+                    var lat = position.coords.latitude;
+                    var lng = position.coords.longitude;
+                    $scope.Time = position.timestamp;
+
+                    $http({
+                        method: 'GET',
+                        url: 'http://stretchgarageweb.azurewebsites.net/api/CheckLocation/?id=1&latitude=' + lat + '&longitude=' + lng,
+                    })
+                    .success(function (data) {
+                        $scope.Position = data;
+                    })
+                    .error(function (err) {
+                        $scope.ShowMessage(err);
+                    });
+                },
+                function(reason) {
+                    //error
+                    $scope.ShowMessage(reason);
+                });
+        }
         $scope.Messages;
 
         $scope.ShowMessage = function (msg) {
+            if(angular.isDefined(msgTimer)) {
+                $scope.Messages = {};
+                $("#message").hide();
+                $timeout.cancel(msgTimer);
+                msgTimer = undefined;
+            }
             $scope.Messages = [{ Message: msg }];
             $("#message").slideDown(400);
-            $timeout(function () {
-                $scope.Messages = {};
+            msgTimer = $timeout(function () {
+                $scope.Messages = undefined;
                 $("#message").slideUp(300);
             }, 2000);
         };
