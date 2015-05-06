@@ -79,7 +79,7 @@
                     //success
                     var lat = position.coords.latitude;
                     var lng = position.coords.longitude;
-                    $scope.Time = position.timestamp;
+                    $scope.Time = 'time: ' + position.timestamp +' lat: '+ position.coords.latitude +' long: '+position.coords.longitude;
 
                     $http({
                         method: 'GET',
