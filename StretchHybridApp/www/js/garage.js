@@ -61,14 +61,12 @@
         $scope.init();
     }])
 
-    .controller('AppController', ['$scope', 'GeolocationService', '$http', '$interval',
-    function ($scope, geolocation, $http, $interval) {
+    .controller('AppController', ['$scope', 'GeolocationService', '$http', '$interval', '$timeout',
+    function ($scope, geolocation, $http, $interval, $timeout) {
         var stop;
         var msgTimer;
         $scope.init = function () {
-            stop = $interval(function () {
-                $scope.getGeolocation();
-            }, 2000);
+            $scope.getGeolocation();
         }
 
         $scope.Position;
@@ -76,26 +74,35 @@
             geolocation()
                 .then(
                 function (position) {
-                    //success
-                    var lat = position.coords.latitude;
-                    var lng = position.coords.longitude;
-                    $scope.Time = 'time: ' + position.timestamp +' lat: '+ position.coords.latitude +' long: '+position.coords.longitude;
-
-                    $http({
-                        method: 'GET',
-                        url: 'http://stretchgarageweb.azurewebsites.net/api/CheckLocation/?id=1&latitude=' + lat + '&longitude=' + lng,
-                    })
-                        .success(function (data) {
-                        $scope.Position = data;
-                    })
-                        .error(function (err) {
-                        $scope.ShowMessage(err);
-                    });
+                    //success                    
+                    $scope.sendLocation(position);
                 },
                 function (reason) {
                     //error
                     $scope.ShowMessage(reason);
                 });
+        }
+        $scope.sendLocation = function (position) {
+            var lat = position.coords.latitude;
+            var lng = position.coords.longitude;            
+            $scope.Time = 'time: ' + position.timestamp; 
+            $http({
+                method: 'GET',
+                url: 'http://stretchgarageweb.azurewebsites.net/api/CheckLocation/?id=1&latitude=' + lat + '&longitude=' + lng,
+                })
+                .success(function (data) {
+                    $scope.Position = 'interval: '+ data.content.interval + ' isParked:'+ data.content.isParked + ' checkSpeed:'+ data.content.checkSpeed;
+                    $scope.getNewLocation(data.content.interval); 
+                    })
+                .error(function (err) {
+                    $scope.ShowMessage(err.message);
+                    $scope.getNewLocation(10000);
+                    });
+        }
+        $scope.getNewLocation = function (interval) {
+            $timeout(function () {
+                $scope.getGeolocation();
+            }, interval);
         }
         $scope.Messages;
 
@@ -110,8 +117,8 @@
             $("#message").slideDown(400);
             msgTimer = $timeout(function () {
                 $scope.Messages = undefined;
-                $("#message").slideUp(300);
-            }, 2000);
+                $("#message").slideUp(400);
+            }, 2000); 
         };
 
         $scope.close = function (id) {
