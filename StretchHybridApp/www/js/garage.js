@@ -61,21 +61,21 @@
         $scope.init();
     }])
 
-.controller('AppController', ['$scope', 'GeolocationService', '$http', 
-    function ($scope, geolocation, $http) {
+    .controller('AppController', ['$scope', 'GeolocationService', '$http', '$interval',
+    function ($scope, geolocation, $http, $interval) {
         var stop;
         var msgTimer;
         $scope.init = function () {
-            stop = $interval(function() {
+            stop = $interval(function () {
                 $scope.getGeolocation();
             }, 2000);
         }
 
         $scope.Position;
-        $scope.getGeolocation = function() {
+        $scope.getGeolocation = function () {
             geolocation()
-            .then(
-                function(position) {
+                .then(
+                function (position) {
                     //success
                     var lat = position.coords.latitude;
                     var lng = position.coords.longitude;
@@ -85,14 +85,14 @@
                         method: 'GET',
                         url: 'http://stretchgarageweb.azurewebsites.net/api/CheckLocation/?id=1&latitude=' + lat + '&longitude=' + lng,
                     })
-                    .success(function (data) {
+                        .success(function (data) {
                         $scope.Position = data;
                     })
-                    .error(function (err) {
+                        .error(function (err) {
                         $scope.ShowMessage(err);
                     });
                 },
-                function(reason) {
+                function (reason) {
                     //error
                     $scope.ShowMessage(reason);
                 });
@@ -100,7 +100,7 @@
         $scope.Messages;
 
         $scope.ShowMessage = function (msg) {
-            if(angular.isDefined(msgTimer)) {
+            if (angular.isDefined(msgTimer)) {
                 $scope.Messages = {};
                 $("#message").hide();
                 $timeout.cancel(msgTimer);
