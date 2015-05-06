@@ -63,11 +63,10 @@
 
     .controller('AppController', ['$scope', 'GeolocationService', '$http', '$interval', '$timeout',
     function ($scope, geolocation, $http, $interval, $timeout) {
-        var stop;
         var msgTimer;
         $scope.init = function () {
             $scope.getGeolocation();
-        }
+        };
 
         $scope.Position;
         $scope.getGeolocation = function () {
@@ -81,7 +80,7 @@
                     //error
                     $scope.ShowMessage(reason);
                 });
-        }
+        };
         $scope.sendLocation = function (position) {
             var lat = position.coords.latitude;
             var lng = position.coords.longitude;            
@@ -98,12 +97,12 @@
                     $scope.ShowMessage(err.message);
                     $scope.getNewLocation(10000);
                     });
-        }
+        };
         $scope.getNewLocation = function (interval) {
             $timeout(function () {
                 $scope.getGeolocation();
             }, interval);
-        }
+        };
         $scope.Messages;
 
         $scope.ShowMessage = function (msg) {
