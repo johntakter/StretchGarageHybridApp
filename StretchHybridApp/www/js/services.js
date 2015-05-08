@@ -59,6 +59,7 @@
                     deferred.reject(new Error("Geolocation is not supported"));
                 });
             } else {
+                $window.navigator.geolocation.geolocationOptions = { maximumAge: 1000, timeout: 5000, enableHighAccuracy: true };
                 $window.navigator.geolocation.getCurrentPosition(function (position) {
                     $rootScope.$apply(function () {
                         deferred.resolve(position);
