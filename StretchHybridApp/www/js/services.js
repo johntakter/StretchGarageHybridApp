@@ -1,7 +1,12 @@
 ﻿garageApp
 
-.service('parkingPlaces',
-    function parkingPlaces($http, $q) {
+.service('settings', function() {
+    return {
+        host: "http://stretchgarageweb.azurewebsites.net/"
+    };
+    })
+.service('parkingPlaces', ['$http', '$q', 'settings',
+    function parkingPlaces($http, $q, settings) {
         var parkingPlace = this;
         parkingPlace.parkingPlaceList = {};
 
@@ -9,7 +14,7 @@
             var defer = $q.defer();
             $http({
                 method: 'GET',
-                url: 'http://stretchgarageweb.azurewebsites.net/api/ParkingPlace/'
+                url: settings.host + 'api/ParkingPlace/'
             })
             .success(function (data) {
                 parkingPlace.parkingPlaceList = data;
@@ -27,7 +32,7 @@
 
             $http({
                 method: 'GET',
-                url: 'http://stretchgarageweb.azurewebsites.net/api/ParkedCars/' + id
+                url: settings.host + '/api/ParkedCars/' + id
             })
             .success(function (data) {
                 parkingPlace.parkingPlaceList = data;
@@ -41,28 +46,41 @@
         }
 
         return parkingPlace;
-    })
+    }])
 
-.factory("GeolocationService", ['$q', '$window', '$rootScope', function ($q, $window, $rootScope) {
-    return function () {
-        var deferred = $q.defer();
+.service("geolocationService", ['$q', '$window', '$rootScope', '$http', 'settings',
+    function geolocationService($q, $window, $rootScope, $http, settings) {
+        var geolocation = this;
+        geolocation.getGeolocation = function () {
+            var deferred = $q.defer();
 
-        if (!$window.navigator) {
-            $rootScope.$apply(function() {
-                deferred.reject(new Error("Geolocation is not supported"));
-            });
-        } else {
-            $window.navigator.geolocation.getCurrentPosition(function (position) {
-                $rootScope.$apply(function() {
-                    deferred.resolve(position);
+            if (!$window.navigator) {
+                $rootScope.$apply(function () {
+                    deferred.reject(new Error("Geolocation is not supported"));
                 });
-            }, function (error) {
-                $rootScope.$apply(function() {
-                    deferred.reject(error);
+            } else {
+                $window.navigator.geolocation.getCurrentPosition(function (position) {
+                    $rootScope.$apply(function () {
+                        deferred.resolve(position);
+                    });
+                }, function (error) {
+                    $rootScope.$apply(function () {
+                        deferred.reject(error);
+                    });
                 });
-            });
+            }
+
+            return deferred.promise;
         }
 
-        return deferred.promise;
-    }
-}]);
+        geolocation.sendLocation = function (position) {
+            var lat = position.coords.latitude;
+            var lng = position.coords.longitude;
+            return $http.get(settings.host + 'api/CheckLocation/?id=1&latitude=' + lat + '&longitude=' + lng)
+                .then(function (result) {
+                    return result.data.content;
+                });
+        }
+
+        return geolocation;
+    }]);

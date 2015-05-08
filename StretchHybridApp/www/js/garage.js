@@ -15,7 +15,7 @@
                 },
                 function (data) {
                     //error
-                    $scope.ShowMessage("Woops, någonting gick fel!", 2000);
+                    $scope.ShowMessage(data, 2000);
                 });
         }
 
@@ -25,7 +25,7 @@
 .controller('ParkingDetailCtrl', ['$scope', 'parkingPlaces', '$routeParams', '$interval',
     function ($scope, parkingPlaces, $routeParams, $interval) {
         var stop;
-        
+
         $scope.init = function () {
             parkingPlaces.GetParkingPlace($routeParams.id)
             .then(function (data) {
@@ -41,13 +41,13 @@
         $scope.getParkingPlace = function () {
             parkingPlaces.GetParkingPlace($routeParams.id)
             .then(
-                function(data) {
+                function (data) {
                     //success
                     $scope.ParkingPlaces = parkingPlaces.parkingPlaceList;
                 },
                 function (data) {
                     //error
-                    $scope.ShowMessage("Woops, någonting gick fel!", 2000);
+                    $scope.ShowMessage(data, 2000);
                 });
         }
 
@@ -61,48 +61,41 @@
         $scope.init();
     }])
 
-    .controller('AppController', ['$scope', 'GeolocationService', '$http', '$interval', '$timeout',
-    function ($scope, geolocation, $http, $interval, $timeout) {
+    .controller('AppController', ['$scope', 'geolocationService', '$http', '$interval', '$timeout',
+    function ($scope, geolocationService, $http, $interval, $timeout) {
         var msgTimer;
         $scope.init = function () {
             $scope.getGeolocation();
         };
-
+        $scope.Count = 0;
         $scope.Position;
         $scope.getGeolocation = function () {
-            geolocation()
+            geolocationService.getGeolocation()
                 .then(
                 function (position) {
-                    //success                    
-                    $scope.sendLocation(position);
-                },
-                function (reason) {
-                    //error
-                    $scope.ShowMessage(reason);
+                    //success
+                    $scope.Count++;
+                    $scope.Time = position.timestamp;
+                    $scope.Position = "lat: " + position.coords.latitude + " long: " + position.coords.longitude;
+                    return geolocationService.sendLocation(position);
+                })
+                .then(function (result) {
+                    $scope.Info = 'interval: ' + result.interval + ' isParked:' + result.isParked + ' checkSpeed:' + result.checkSpeed;
+                    $scope.getNewLocation(result.interval);
                 });
         };
-        $scope.sendLocation = function (position) {
-            var lat = position.coords.latitude;
-            var lng = position.coords.longitude;            
-            $scope.Time = 'time: ' + position.timestamp; 
-            $http({
-                method: 'GET',
-                url: 'http://stretchgarageweb.azurewebsites.net/api/CheckLocation/?id=1&latitude=' + lat + '&longitude=' + lng,
-                })
-                .success(function (data) {
-                    $scope.Position = 'interval: '+ data.content.interval + ' isParked:'+ data.content.isParked + ' checkSpeed:'+ data.content.checkSpeed;
-                    $scope.getNewLocation(data.content.interval); 
-                    })
-                .error(function (err) {
-                    $scope.ShowMessage(err.message);
-                    $scope.getNewLocation(10000);
-                    });
-        };
+
+        var stop;
         $scope.getNewLocation = function (interval) {
-            $timeout(function () {
+            if (angular.isDefined(stop)) {
+                $timeout.cancel(stop);
+                stop = undefined;
+            }
+            stop = $timeout(function () {
                 $scope.getGeolocation();
             }, interval);
         };
+
         $scope.Messages;
 
         $scope.ShowMessage = function (msg) {
@@ -117,7 +110,7 @@
             msgTimer = $timeout(function () {
                 $scope.Messages = undefined;
                 $("#message").slideUp(400);
-            }, 2000); 
+            }, 2000);
         };
 
         $scope.close = function (id) {
@@ -127,4 +120,4 @@
         $scope.init();
     }]);
 
-$(document).ready(function () {});
+$(document).ready(function () { });
