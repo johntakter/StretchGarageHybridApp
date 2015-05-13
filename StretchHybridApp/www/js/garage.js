@@ -61,8 +61,22 @@
         $scope.init();
     }])
 
-    .controller('AppController', ['$scope', 'geolocationService', '$http', '$interval', '$timeout',
-    function ($scope, geolocationService, $http, $interval, $timeout) {
+.controller('UnitCtrl', ['$scope', 'settings', 'unitService', '$location',
+    function ($scope, settings, unitService, $location) {
+        if (settings.Id() !== undefined) {
+            $scope.UnitName = settings.Id();
+        }
+
+        $scope.submit = function () {
+            unitService.createUnit($scope.UnitName)
+            .then(function() {
+                $location.path("/");
+            });
+        };
+    }])
+
+.controller('AppController', ['$scope', 'geolocationService', '$http', '$interval', '$timeout', 'settings',
+    function ($scope, geolocationService, $http, $interval, $timeout, settings) {
         var msgTimer;
         $scope.init = function () {
             $scope.getGeolocation();
