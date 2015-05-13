@@ -12,7 +12,6 @@
         }
     ])
     .run(['$location', 'settings', function ($location, settings) {
-        window.localStorage.clear();
         if(settings.Id() == undefined){
             $location.path("/CreateUnit/");
         }
