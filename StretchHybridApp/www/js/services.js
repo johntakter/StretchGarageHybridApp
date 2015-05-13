@@ -2,7 +2,7 @@
     .service('settings', function () {
         return {
             Id: function () {
-                return localStorage["id"];
+                return window.localStorage.getItem("id");
             },
             host: "http://stretchgarageweb.azurewebsites.net/"
         };
@@ -104,7 +104,7 @@
                         defer.reject(result.message);
                     }
                     else {
-                        localStorage["id"] = result.content;
+                        window.localStorage.setItem("id", result.content);
                         defer.resolve(result.content);
                     }
                 })
