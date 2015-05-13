@@ -36,7 +36,7 @@
             geolocation.sendLocation = function (position) {
                 var lat = position.coords.latitude;
                 var lng = position.coords.longitude;
-                return $http.get(settings.host + 'api/CheckLocation/?id=1&latitude=' + lat + '&longitude=' + lng)
+                return $http.get(settings.host + 'api/CheckLocation/?id=' + settings.Id() + '&latitude=' + lat + '&longitude=' + lng)
                     .then(function (result) {
                         return result.data.content;
                     });
@@ -44,6 +44,7 @@
 
             return geolocation;
         }])
+        
     .service('parkingPlaces', ['$http', '$q', 'settings',
         function parkingPlaces($http, $q, settings) {
             var parkingPlace = this;
