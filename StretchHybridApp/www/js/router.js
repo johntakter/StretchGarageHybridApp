@@ -9,4 +9,9 @@
                     redirectTo: '/'
                 });
         }
-    ]);
+    ])
+    .run(['$location', 'settings', function ($location, settings) {
+        if(settings.Id() == undefined){
+            $location.path("/CreateUnit/");
+        }
+    }]);
