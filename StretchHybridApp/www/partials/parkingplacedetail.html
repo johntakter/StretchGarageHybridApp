@@ -1,7 +1,5 @@
-﻿<div class="box">
-    <div id="spots-list">
-        <div class="row" ng-repeat="spot in ParkingPlaces.content | orderBy : '-isAvailable'">
-            <div class="column spot-{{spot.cssClass}} col-xs-12"><span class="car car-{{spot.cssClass}}"></span> {{spot.status}}</div>
-        </div>
+﻿<div class="row" ng-repeat="spot in ParkingPlaces.content | orderBy : '-isAvailable'">
+    <div class="column spot-{{spot.cssClass}} col-xs-12">
+        <span class="car car-{{spot.cssClass}}"></span> {{spot.status}}
     </div>
 </div>

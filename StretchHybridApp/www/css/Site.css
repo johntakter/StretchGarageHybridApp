@@ -84,18 +84,18 @@ div#spots-list li{
 div.row {
     margin: 0;
 }
-div#spots-list div.column {
+div.row:hover {
+    background: #EEEEEE;
+}
+div.column {
     margin: 0.1em 0;
     padding:20px;
 }
-    div#spots-list div.row:hover {
-        background: #EEEEEE;
-    }
-div#spots-list div.spot-green {
+div.spot-green {
     background: #87D37C;
     color: #FFFFFF;
 }
-div#spots-list div.spot-red {
+div.spot-red {
     color: #FFF;
     font-weight: bold;
     background: #cc3333;

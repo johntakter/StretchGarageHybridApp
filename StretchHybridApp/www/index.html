@@ -36,17 +36,17 @@
                 </li>
             </ul>
         </div>
-        <div class="container">
-            <div ng-view></div>
-            <div class="footer">
-                <p>G. Hedman, J. Takter, N. Frank</p>
-                <p>© Stretch Garage</p>
-            </div>
-            <div>{{Count}}</div>
-            <div>{{Time}}</div>
-            <div>{{Position}}</div>
-            <div>{{Info}}</div>
+        <div class="container box" ng-view>
         </div>
+        <div class="footer">
+            <p>G. Hedman, J. Takter, N. Frank</p>
+            <p>© Stretch Garage</p>
+        </div>
+        <div>{{Count}}</div>
+        <div>{{Time}}</div>
+        <div>{{Position}}</div>
+        <div>{{Info}}</div>
+        
         <script type="text/javascript" charset="utf-8" src="cordova.js"></script>
         <script>
             document.addEventListener("deviceready", function() {
