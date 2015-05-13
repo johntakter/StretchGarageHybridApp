@@ -1,87 +1,125 @@
 ﻿garageApp
-
-.service('settings', function() {
-    return {
-        host: "http://stretchgarageweb.azurewebsites.net/"
-    };
+    .service('settings', function () {
+        return {
+            Id: function () {
+                return localStorage["id"];
+            },
+            host: "http://localhost:3186/"
+        };
     })
-.service('parkingPlaces', ['$http', '$q', 'settings',
-    function parkingPlaces($http, $q, settings) {
-        var parkingPlace = this;
-        parkingPlace.parkingPlaceList = {};
 
-        parkingPlace.GetAllParkingPlaces = function () {
-            var defer = $q.defer();
-            $http({
-                method: 'GET',
-                url: settings.host + 'api/ParkingPlace/'
-            })
-            .success(function (data) {
-                parkingPlace.parkingPlaceList = data;
-                defer.resolve(data);
-            })
-            .error(function (err) {
-                defer.reject(err);
-            });
+    .service("geolocationService", ['$q', '$window', '$rootScope', '$http', 'settings',
+        function geolocationService($q, $window, $rootScope, $http, settings) {
+            var geolocation = this;
+            geolocation.getGeolocation = function () {
+                var deferred = $q.defer();
 
-            return defer.promise;
-        }
+                if (!$window.navigator) {
+                    $rootScope.$apply(function () {
+                        deferred.reject(new Error("Geolocation is not supported"));
+                    });
+                } else {
+                    $window.navigator.geolocation.getCurrentPosition(function (position) {
+                        $rootScope.$apply(function () {
+                            deferred.resolve(position);
+                        });
+                    }, function (error) {
+                        $rootScope.$apply(function () {
+                            deferred.reject(error);
+                        });
+                    });
+                }
 
-        parkingPlace.GetParkingPlace = function (id) {
-            var defer = $q.defer();
+                return deferred.promise;
+            };
 
-            $http({
-                method: 'GET',
-                url: settings.host + '/api/ParkedCars/' + id
-            })
-            .success(function (data) {
-                parkingPlace.parkingPlaceList = data;
-                defer.resolve(data);
-            })
-            .error(function (err) {
-                defer.reject(err);
-            });
+            geolocation.sendLocation = function (position) {
+                var lat = position.coords.latitude;
+                var lng = position.coords.longitude;
+                return $http.get(settings.host + 'api/CheckLocation/?id=1&latitude=' + lat + '&longitude=' + lng)
+                    .then(function (result) {
+                        return result.data.content;
+                    });
+            };
 
-            return defer.promise;
-        }
-
-        return parkingPlace;
+            return geolocation;
+        }])
+    .service('parkingPlaces', ['$http', '$q', 'settings',
+        function parkingPlaces($http, $q, settings) {
+            var parkingPlace = this;
+            parkingPlace.parkingPlaceList = {};
+    
+            parkingPlace.GetAllParkingPlaces = function () {
+                var defer = $q.defer();
+                $http({
+                    method: 'GET',
+                    url: settings.host + 'api/ParkingPlace/'
+                })
+                .success(function (data) {
+                    parkingPlace.parkingPlaceList = data;
+                    defer.resolve(data);
+                })
+                .error(function (err) {
+                    defer.reject(err);
+                });
+    
+                return defer.promise;
+            };
+    
+            parkingPlace.GetParkingPlace = function (id) {
+                var defer = $q.defer();
+    
+                $http({
+                    method: 'GET',
+                    url: settings.host + 'api/ParkedCars/' + id
+                })
+                .success(function (data) {
+                    parkingPlace.parkingPlaceList = data;
+                    defer.resolve(data);
+                })
+                .error(function (err) {
+                    defer.reject(err);
+                });
+    
+                return defer.promise;
+            };
+    
+            return parkingPlace;
     }])
-
-.service("geolocationService", ['$q', '$window', '$rootScope', '$http', 'settings',
-    function geolocationService($q, $window, $rootScope, $http, settings) {
-        var geolocation = this;
-        geolocation.getGeolocation = function () {
-            var deferred = $q.defer();
-
-            if (!$window.navigator) {
-                $rootScope.$apply(function () {
-                    deferred.reject(new Error("Geolocation is not supported"));
+    .service("unitService", ['$http', 'settings', '$q',
+        function unitService($http, settings, $q) {
+            var unit = this;
+    
+            unit.createUnit = function (name) {
+                var defer = $q.defer();
+    
+                $http({
+                    method: 'GET',
+                    url: settings.host + 'api/Unit/' + name + '/' + 0
+                })
+                .success(function (result) {
+                    console.log(result);
+                    if (!result.success) {
+                        defer.reject(result.message);
+                    }
+                    else {
+                        localStorage["id"] = result.content;
+                        defer.resolve(result.content);
+                    }
+                })
+                .error(function (err) {
+                    defer.reject(err);
                 });
-            } else {
-                $window.navigator.geolocation.geolocationOptions = { maximumAge: 1000, timeout: 5000, enableHighAccuracy: true };
-                $window.navigator.geolocation.getCurrentPosition(function (position) {
-                    $rootScope.$apply(function () {
-                        deferred.resolve(position);
-                    });
-                }, function (error) {
-                    $rootScope.$apply(function () {
-                        deferred.reject(error);
-                    });
-                });
-            }
-
-            return deferred.promise;
-        }
-
-        geolocation.sendLocation = function (position) {
-            var lat = position.coords.latitude;
-            var lng = position.coords.longitude;
-            return $http.get(settings.host + 'api/CheckLocation/?id=1&latitude=' + lat + '&longitude=' + lng)
-                .then(function (result) {
-                    return result.data.content;
-                });
-        }
-
-        return geolocation;
-    }]);
+    
+                return defer.promise;
+            };
+    
+            unit.getId = function () {
+                return localStorage["id"];
+            };
+    
+            unit.setId = function (id) {
+                localStorage["id"] = id;
+            };
+            return unit;
+        }]);
