@@ -1,10 +1,12 @@
-﻿garageApp
+﻿/* global $ */
+/* global angular */
+garageApp
 
 .controller('ParkingPlaceCtrl', ['$scope', 'parkingPlaces',
     function ($scope, parkingPlaces) {
         $scope.init = function () {
             $scope.getAllParkingPlaces();
-        }
+        };
 
         $scope.getAllParkingPlaces = function () {
             parkingPlaces.GetAllParkingPlaces()
@@ -17,7 +19,7 @@
                     //error
                     $scope.ShowMessage(data, 2000);
                 });
-        }
+        };
 
         $scope.init();
     }])
@@ -34,7 +36,7 @@
                     $scope.getParkingPlace();
                 }, 7000);
             });
-        }
+        };
 
         $scope.ParkingPlaces = {};
 
@@ -49,7 +51,7 @@
                     //error
                     $scope.ShowMessage(data, 2000);
                 });
-        }
+        };
 
         $scope.$on('$destroy', function () {
             if (angular.isDefined(stop)) {
