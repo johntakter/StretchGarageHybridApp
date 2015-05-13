@@ -4,7 +4,7 @@
             Id: function () {
                 return localStorage["id"];
             },
-            host: "http://localhost:3186/"
+            host: "http://stretchgarageweb.azurewebsites.net/"
         };
     })
 
