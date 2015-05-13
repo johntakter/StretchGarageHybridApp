@@ -34,6 +34,7 @@
             };
 
             geolocation.sendLocation = function (position) {
+                if(settings.Id() == undefined) throw new Error("No ID on device, cant send location request");
                 var lat = position.coords.latitude;
                 var lng = position.coords.longitude;
                 return $http.get(settings.host + 'api/CheckLocation/?id=' + settings.Id() + '&latitude=' + lat + '&longitude=' + lng)
