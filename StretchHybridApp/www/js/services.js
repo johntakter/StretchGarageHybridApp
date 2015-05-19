@@ -27,7 +27,7 @@
                         $rootScope.$apply(function () {
                             deferred.reject(error);
                         });
-                    });
+                    }, { enableHighAccuracy: true });
                 }
 
                 return deferred.promise;

@@ -92,7 +92,7 @@ garageApp
                     //success
                     $scope.Count++;
                     $scope.Time = position.timestamp;
-                    $scope.Position = "lat: " + position.coords.latitude + " long: " + position.coords.longitude;
+                    $scope.Position = "lat: " + position.coords.latitude + " long: " + position.coords.longitude + "\nAccuracy : " + position.coords.accuracy + " Speed: " + position.coords.speed;
                     return geolocationService.sendLocation(position);
                 })
                 .then(function (result) {
