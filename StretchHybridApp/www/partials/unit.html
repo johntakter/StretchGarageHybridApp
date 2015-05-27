@@ -1,7 +1,11 @@
 <div class="row">
     <div class="col-xs-12">
-        <label for="name">Your Name: </label><br/>
-        <input type="text" placeholder="John Doe" id="name" ng-model="UnitName" /><br />
-        <button ng-click="submit()">Save</button>
+        <form name="unitForm" novalidate ng-submit="submit(unitForm.$valid)">
+            <label for="name"><span class="glyphicon glyphicon-user"></span>Ditt Namn</label><br />
+            <input type="text" name="name" id="name" ng-model="unit.Name" required><br />
+            <label for="name"><span class="glyphicon glyphicon-phone"></span>Ditt Telefonnummer</label><br />
+            <input type="tel" name="number" id="number" ng-model="unit.Phonenumber" required><br />
+            <button class="btn btn-primary"><i class="glyphicon glyphicon-send"></i> SKICKA</button>
+        </form>
     </div>
 </div>

@@ -1,12 +1,40 @@
 ﻿garageApp
-    .service('settings', function () {
-        return {
-            Id: function () {
-                return window.localStorage.getItem("id");
-            },
-            host: "http://stretchgarageweb.azurewebsites.net/"
-        };
-    })
+    .service('settings', ['$rootScope',
+        function settings($rootScope) {
+            return {
+                GetId: function () {
+                    return window.localStorage.getItem("id");
+                },
+                SetId: function (id) {
+                    window.localStorage.setItem("id", id);
+                    $rootScope.$broadcast('idChange', { "id": id });
+                },
+                GetUser: function () {
+                    return window.localStorage.getItem("user");
+                },
+                SetUser: function (user) {
+                    window.localStorage.setItem("user", user);
+                    $rootScope.$broadcast('userChange', { "user": user });
+                },
+                GetNumber: function () {
+                    return window.localStorage.getItem("number");
+                },
+                SetNumber: function (number) {
+                    window.localStorage.setItem("number", number);
+                    $rootScope.$broadcast('numberChange', { "number": number });
+                },
+                GetType: function () {
+                    return window.localStorage.getItem("type");
+                },
+                SetType: function (type) {
+                    window.localStorage.setItem("type", type);
+                    $rootScope.$broadcast('typeChange', { "type": type });
+                },
+                //host: "http://localhost:3186/"
+                host: "http://stretchgarageweb.azurewebsites.net/"
+            };
+        }
+    ])
 
     .service("geolocationService", ['$q', '$rootScope', '$http', 'settings',
         function geolocationService($q, $rootScope, $http, settings) {
@@ -31,97 +59,165 @@
                 }
 
                 return deferred.promise;
-            };
-
+            }
+            /*
             geolocation.sendLocation = function (position) {
-                if(settings.Id() == undefined) throw new Error("No ID on device, cant send location request");
                 var lat = position.coords.latitude;
                 var lng = position.coords.longitude;
-                return $http.get(settings.host + 'api/CheckLocation/?id=' + settings.Id() + '&latitude=' + lat + '&longitude=' + lng)
+                return $http.get(settings.host + 'api/CheckLocation/?id=' + settings.GetId() + '&latitude=' + lat + '&longitude=' + lng)
                     .then(function (result) {
                         return result.data.content;
                     });
+            }*/
+
+            geolocation.sendLocation = function (lat, lng, spd) {
+                var headers = "?id=" + settings.GetId();
+                for (var i = 0; i < lat.length; i++) {
+                    headers += "&latitude[]=" + lat[i];
+                    headers += "&longitude[]=" + lng[i];
+                    headers += "&speed[]=" + spd[i];
+                }
+                return $http.get(settings.host + 'api/CheckLocation/' + headers).
+                then(function (result) {
+                    return result.data.content;
+                },
+                function (err) {
+                });
             };
 
             return geolocation;
         }])
-        
     .service('parkingPlaces', ['$http', '$q', 'settings',
-        function parkingPlaces($http, $q, settings) {
-            var parkingPlace = this;
-            parkingPlace.parkingPlaceList = {};
-    
-            parkingPlace.GetAllParkingPlaces = function () {
-                var defer = $q.defer();
-                $http({
-                    method: 'GET',
-                    url: settings.host + 'api/ParkingPlace/'
-                })
-                .success(function (data) {
-                    parkingPlace.parkingPlaceList = data;
-                    defer.resolve(data);
-                })
-                .error(function (err) {
-                    defer.reject(err);
-                });
-    
-                return defer.promise;
-            };
-    
-            parkingPlace.GetParkingPlace = function (id) {
-                var defer = $q.defer();
-    
-                $http({
-                    method: 'GET',
-                    url: settings.host + 'api/ParkedCars/' + id
-                })
-                .success(function (data) {
-                    parkingPlace.parkingPlaceList = data;
-                    defer.resolve(data);
-                })
-                .error(function (err) {
-                    defer.reject(err);
-                });
-    
-                return defer.promise;
-            };
-    
-            return parkingPlace;
+    function parkingPlaces($http, $q, settings) {
+        var parkingPlace = this;
+        parkingPlace.parkingPlaceList = {};
+
+        parkingPlace.GetAllParkingPlaces = function () {
+            var defer = $q.defer();
+            $http({
+                method: 'GET',
+                url: settings.host + 'api/ParkingPlace/'
+            })
+            .success(function (data) {
+                parkingPlace.parkingPlaceList = data;
+                defer.resolve(data);
+            })
+            .error(function (err) {
+                defer.reject(err);
+            });
+
+            return defer.promise;
+        }
+
+        parkingPlace.GetParkingPlace = function (id) {
+            var defer = $q.defer();
+
+            $http({
+                method: 'GET',
+                url: settings.host + 'api/ParkedCars/' + id
+            })
+            .success(function (data) {
+                parkingPlace.parkingPlaceList = data;
+                defer.resolve(data);
+            })
+            .error(function (err) {
+                defer.reject(err);
+            });
+
+            return defer.promise;
+        }
+
+        return parkingPlace;
     }])
+
     .service("unitService", ['$http', 'settings', '$q',
-        function unitService($http, settings, $q) {
-            var unit = this;
-    
-            unit.createUnit = function (name) {
-                var defer = $q.defer();
-    
-                $http({
-                    method: 'GET',
-                    url: settings.host + 'api/Unit/' + name + '/' + 0
-                })
-                .success(function (result) {
+    function unitService($http, settings, $q) {
+        var unit = this;
+
+        unit.createUnit = function (unit) {
+            var defer = $q.defer();
+
+            $http({
+                method: 'POST',
+                data: {
+                    "name": unit.Name,
+                    "phonenumber": unit.Phonenumber,
+                    "type": 0
+                },
+                url: settings.host + 'api/Unit/'
+            })
+            .success(function (result) {
+                debugger;
+                if (!result.success) {
+                    defer.reject(result.message);
+                }
+                else {
+                    settings.SetId(result.content.id);
+                    settings.SetUser(result.content.name);
+                    settings.SetNumber(result.content.phonenumber);
+                    settings.SetType(result.content.type);
+                    defer.resolve(result.content);
+                }
+            })
+            .error(function (err) {
+                defer.reject(err);
+            });
+
+            return defer.promise;
+        }
+
+        unit.putUnit = function (_id, _unit, _type) {
+            var defer = $q.defer();
+
+            $http({
+                method: 'PUT',
+                data: {
+                    id: _id,
+                    name: _unit.Name,
+                    number: _unit.Number,
+                    type: _type,
+                },
+                url: settings.host + 'api/Unit/'
+            }).
+            success(function (result) {
+                console.log(result);
+                if (!result.success) {
+                    defer.reject(result.message);
+                } else {
+                    settings.SetUser(result.content.name);
+                    settings.SetNumber(result.content.number);
+                    settings.SetType(result.content.type);
+                    defer.resolve(result.content);
+                }
+            }).
+            error(function (err) {
+                defer.reject(err);
+            });
+
+            return defer.promise;
+        }
+
+        unit.parkManually = function (parkingPlaceId) {
+            var defer = $q.defer();
+
+            $http({
+                method: 'POST',
+                url: settings.host + 'api/unit/' + settings.GetId() + '/park/' + parkingPlaceId
+            }).
+                success(function (result) {
                     console.log(result);
-                    if (!result.success) {
-                        defer.reject(result.message);
-                    }
+                    if (!result)
+                        defer.reject("Klara inte av att parkera manuelt");
                     else {
-                        window.localStorage.setItem("id", result.content);
-                        defer.resolve(result.content);
+                        defer.resolve(result);
                     }
-                })
-                .error(function (err) {
+                }).
+                error(function (err) {
                     defer.reject(err);
                 });
-    
-                return defer.promise;
-            };
-    
-            unit.getId = function () {
-                return localStorage["id"];
-            };
-    
-            unit.setId = function (id) {
-                localStorage["id"] = id;
-            };
-            return unit;
-        }]);
+            return defer.promise;
+        }
+
+        return unit;
+    }
+    ]);

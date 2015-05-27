@@ -1,4 +1,4 @@
-﻿var garageApp = angular.module("GarageApp", ["ngRoute"])
+﻿var garageApp = angular.module("GarageApp", ["ngRoute", "ui.bootstrap"])
     .config(['$routeProvider',
         function ($routeProvider) {
             $routeProvider.
@@ -12,7 +12,7 @@
         }
     ])
     .run(['$location', 'settings', function ($location, settings) {
-        if(settings.Id() == undefined){
+        if (settings.GetId() == undefined) {
             $location.path("/CreateUnit/");
         }
     }]);
