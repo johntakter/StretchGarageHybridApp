@@ -65,13 +65,13 @@
         $scope.init();
     }])
 
-.controller('UnitCtrl', ['$scope', 'settings', 'unitService', '$location', '$timeout',
-    function ($scope, settings, unitService, $location, $timeout) {
+.controller('UnitCtrl', ['$scope', '$rootScope', 'settings', 'unitService', '$location', '$timeout',
+    function ($scope, $rootScope, settings, unitService, $location, $timeout) {
         $scope.init = function () {
             if (settings.GetUser() !== undefined) {
                 $scope.unit.Name = settings.GetUser();
-                debugger;
                 $scope.unit.Phonenumber = settings.GetNumber();
+                $scope.toggleGpsText();
             }
         }
 
@@ -95,6 +95,18 @@
                 .then(function () {
                     $location.path("/");
                 });
+            }
+        };
+
+        $rootScope.$on('gpsChange', function (event, args) {
+            $scope.toggleGpsText();
+        });
+
+        $scope.toggleGpsText = function() {
+            if (settings.GetGps()) {
+                $scope.gpsText = "Stoppa Gps";
+            } else {
+                $scope.gpsText = "Starta Gps";
             }
         };
 
