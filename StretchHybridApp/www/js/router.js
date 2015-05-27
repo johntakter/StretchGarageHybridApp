@@ -12,7 +12,10 @@
         }
     ])
     .run(['$location', 'settings', function ($location, settings) {
-        if (settings.GetId() == undefined) {
+        if (window.localStorage.getItem("gps") == undefined) {
+            settings.SetGps(true);
+        }
+        if(settings.GetId() == undefined) {
             $location.path("/CreateUnit/");
         }
     }]);

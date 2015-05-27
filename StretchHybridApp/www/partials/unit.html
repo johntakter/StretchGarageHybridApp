@@ -1,11 +1,16 @@
 <div class="row">
     <div class="col-xs-12">
         <form name="unitForm" novalidate ng-submit="submit(unitForm.$valid)">
-            <label for="name"><span class="glyphicon glyphicon-user"></span>Ditt Namn</label><br />
-            <input type="text" name="name" id="name" ng-model="unit.Name" required><br />
-            <label for="name"><span class="glyphicon glyphicon-phone"></span>Ditt Telefonnummer</label><br />
-            <input type="tel" name="number" id="number" ng-model="unit.Phonenumber" required><br />
+            <label for="name"><span class="glyphicon glyphicon-user"></span>Ditt Namn</label><br/>
+            <input type="text" name="name" id="name" ng-model="unit.Name" required><br/>
+            <label for="number"><span class="glyphicon glyphicon-phone"></span>Ditt Telefonnummer</label><br/>
+            <input type="tel" name="number" id="number" ng-model="unit.Phonenumber" required><br/>
             <button class="btn btn-primary"><i class="glyphicon glyphicon-send"></i> SKICKA</button>
         </form>
+    </div>
+</div>
+<div class="row">
+    <div class="col-xs-12">
+        <button class="btn btn-danger" ng-click="toggleGps()"><span class="glyphicon glyphicon-map-marker"></span>{{gpsText}}</button>
     </div>
 </div>

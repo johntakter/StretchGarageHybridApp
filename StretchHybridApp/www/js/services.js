@@ -1,5 +1,5 @@
 ﻿garageApp
-    .service('settings', ['$rootScope',
+.factory('settings', ['$rootScope',
         function settings($rootScope) {
             return {
                 GetId: function () {
@@ -30,7 +30,13 @@
                     window.localStorage.setItem("type", type);
                     $rootScope.$broadcast('typeChange', { "type": type });
                 },
-                //host: "http://localhost:3186/"
+                SetGps: function (gps) {
+                    window.localStorage.setItem("gps", gps);
+                    $rootScope.$broadcast('gpsChange', { "gps": gps });
+                },
+                GetGps: function () {
+                    return window.localStorage.getItem("gps") === "true" ? true : false;
+                },
                 host: "http://stretchgarageweb.azurewebsites.net/"
             };
         }
@@ -55,21 +61,12 @@
                         $rootScope.$apply(function () {
                             deferred.reject(error);
                         });
-                    }, { enableHighAccuracy: true });
+                    });
                 }
 
                 return deferred.promise;
-            }
-            /*
-            geolocation.sendLocation = function (position) {
-                var lat = position.coords.latitude;
-                var lng = position.coords.longitude;
-                return $http.get(settings.host + 'api/CheckLocation/?id=' + settings.GetId() + '&latitude=' + lat + '&longitude=' + lng)
-                    .then(function (result) {
-                        return result.data.content;
-                    });
-            }*/
-
+            };
+            
             geolocation.sendLocation = function (lat, lng, spd) {
                 var headers = "?id=" + settings.GetId();
                 for (var i = 0; i < lat.length; i++) {
@@ -87,127 +84,146 @@
 
             return geolocation;
         }])
+        
     .service('parkingPlaces', ['$http', '$q', 'settings',
-    function parkingPlaces($http, $q, settings) {
-        var parkingPlace = this;
-        parkingPlace.parkingPlaceList = {};
-
-        parkingPlace.GetAllParkingPlaces = function () {
-            var defer = $q.defer();
-            $http({
-                method: 'GET',
-                url: settings.host + 'api/ParkingPlace/'
-            })
-            .success(function (data) {
-                parkingPlace.parkingPlaceList = data;
-                defer.resolve(data);
-            })
-            .error(function (err) {
-                defer.reject(err);
-            });
-
-            return defer.promise;
-        }
-
-        parkingPlace.GetParkingPlace = function (id) {
-            var defer = $q.defer();
-
-            $http({
-                method: 'GET',
-                url: settings.host + 'api/ParkedCars/' + id
-            })
-            .success(function (data) {
-                parkingPlace.parkingPlaceList = data;
-                defer.resolve(data);
-            })
-            .error(function (err) {
-                defer.reject(err);
-            });
-
-            return defer.promise;
-        }
-
-        return parkingPlace;
-    }])
+        function parkingPlaces($http, $q, settings) {
+            var parkingPlace = this;
+            parkingPlace.parkingPlaceList = {};
+    
+            parkingPlace.GetAllParkingPlaces = function () {
+                var defer = $q.defer();
+                $http({
+                    method: 'GET',
+                    url: settings.host + 'api/ParkingPlace/'
+                })
+                .success(function (data) {
+                    parkingPlace.parkingPlaceList = data;
+                    defer.resolve(data);
+                })
+                .error(function (err) {
+                    defer.reject(err);
+                });
+    
+                return defer.promise;
+            };
+    
+            parkingPlace.GetParkingPlace = function (id) {
+                var defer = $q.defer();
+    
+                $http({
+                    method: 'GET',
+                    url: settings.host + 'api/ParkedCars/' + id
+                })
+                .success(function (data) {
+                    parkingPlace.parkingPlaceList = data;
+                    defer.resolve(data);
+                })
+                .error(function (err) {
+                    defer.reject(err);
+                });
+    
+                return defer.promise;
+            };
+    
+            return parkingPlace;
+        }])
 
     .service("unitService", ['$http', 'settings', '$q',
-    function unitService($http, settings, $q) {
-        var unit = this;
+        function unitService($http, settings, $q) {
+            var unit = this;
+    
+            unit.createUnit = function (input) {
+                var defer = $q.defer();
 
-        unit.createUnit = function (unit) {
-            var defer = $q.defer();
+                $http({
+                    method: 'POST',
+                    data: {
+                        "name": input.Name,
+                        "phonenumber": input.Phonenumber,
+                        "type": 0
+                    },
+                    url: settings.host + 'api/Unit/'
+                })
+                .success(function (result) {
+                    if (!result.success) {
+                        defer.reject(result.message);
+                    }
+                    else {
+                        settings.SetId(result.content.id);
+                        settings.SetUser(result.content.name);
+                        settings.SetNumber(result.content.phonenumber);
+                        settings.SetType(result.content.type);
+                        defer.resolve(result.content);
+                    }
+                })
+                .error(function (err) {
+                    defer.reject(err);
+                });
 
-            $http({
-                method: 'POST',
-                data: {
-                    "name": unit.Name,
-                    "phonenumber": unit.Phonenumber,
-                    "type": 0
-                },
-                url: settings.host + 'api/Unit/'
-            })
-            .success(function (result) {
-                debugger;
-                if (!result.success) {
-                    defer.reject(result.message);
-                }
-                else {
-                    settings.SetId(result.content.id);
-                    settings.SetUser(result.content.name);
-                    settings.SetNumber(result.content.phonenumber);
-                    settings.SetType(result.content.type);
-                    defer.resolve(result.content);
-                }
-            })
-            .error(function (err) {
-                defer.reject(err);
-            });
-
-            return defer.promise;
-        }
-
-        unit.putUnit = function (_id, _unit, _type) {
-            var defer = $q.defer();
-
-            $http({
-                method: 'PUT',
-                data: {
-                    id: _id,
-                    name: _unit.Name,
-                    number: _unit.Number,
-                    type: _type,
-                },
-                url: settings.host + 'api/Unit/'
-            }).
-            success(function (result) {
-                console.log(result);
-                if (!result.success) {
-                    defer.reject(result.message);
-                } else {
-                    settings.SetUser(result.content.name);
-                    settings.SetNumber(result.content.number);
-                    settings.SetType(result.content.type);
-                    defer.resolve(result.content);
-                }
-            }).
-            error(function (err) {
-                defer.reject(err);
-            });
-
-            return defer.promise;
-        }
-
-        unit.parkManually = function (parkingPlaceId) {
-            var defer = $q.defer();
-
-            $http({
-                method: 'POST',
-                url: settings.host + 'api/unit/' + settings.GetId() + '/park/' + parkingPlaceId
-            }).
+                return defer.promise;
+            };
+            
+            unit.putUnit = function (_id, _unit, _type) {
+                var defer = $q.defer();
+    
+                $http({
+                    method: 'PUT',
+                    data: {
+                        id: _id,
+                        name: _unit.Name,
+                        number: _unit.Number,
+                        type: _type,
+                    },
+                    url: settings.host + 'api/Unit/'
+                }).
                 success(function (result) {
-                    console.log(result);
-                    if (!result)
-                        defer.reject("Klara inte av att parkera manuelt");
+                    if (!result.success) {
+                        defer.reject(result.message);
+                    } else {
+                        settings.SetUser(result.content.name);
+                        settings.SetNumber(result.content.number);
+                        settings.SetType(result.content.type);
+                        defer.resolve(result.content);
+                    }
+                }).
+                error(function (err) {
+                    defer.reject(err);
+                });
+    
+                return defer.promise;
+            };
+    
+            unit.parkManually = function (parkingPlaceId) {
+                var defer = $q.defer();
+    
+                $http({
+                    method: 'POST',
+                    url: settings.host + 'api/unit/' + settings.GetId() + '/park/' + parkingPlaceId
+                }).
+                    success(function (result) {
+                        if (!result)
+                            defer.reject("Klara inte av att parkera manuelt");
+                        else {
+                            defer.resolve(result);
+                        }
+                    }).
+                    error(function (err) {
+                        defer.reject(err);
+                    });
+                return defer.promise;
+            };
+    
+            unit.unparkManually = function () {
+                var defer = $q.defer();
+    
+                $http({
+                    method: 'DELETE',
+                    url: settings.host + 'api/unit/' + settings.GetId() + '/park/'
+                }).
+                success(function (result) {
+                    if (!result) {
+                        defer.reject("Klara inte av att avparkera manuelt");
+                    }
                     else {
                         defer.resolve(result);
                     }
@@ -215,9 +231,9 @@
                 error(function (err) {
                     defer.reject(err);
                 });
-            return defer.promise;
-        }
-
-        return unit;
-    }
-    ]);
+    
+                return defer.promise;
+            };
+            
+            return unit;
+        }]);

@@ -65,13 +65,13 @@
         $scope.init();
     }])
 
-.controller('UnitCtrl', ['$scope', 'settings', 'unitService', '$location', '$timeout',
-    function ($scope, settings, unitService, $location, $timeout) {
+.controller('UnitCtrl', ['$scope', '$rootScope', 'settings', 'unitService', '$location', '$timeout',
+    function ($scope, $rootScope, settings, unitService, $location, $timeout) {
         $scope.init = function () {
             if (settings.GetUser() !== undefined) {
                 $scope.unit.Name = settings.GetUser();
-                debugger;
                 $scope.unit.Phonenumber = settings.GetNumber();
+                $scope.toggleGpsText();
             }
         }
 
@@ -98,12 +98,23 @@
             }
         };
 
+        $rootScope.$on('gpsChange', function (event, args) {
+            $scope.toggleGpsText();
+        });
+
+        $scope.toggleGpsText = function() {
+            if (settings.GetGps()) {
+                $scope.gpsText = "Stoppa Gps";
+            } else {
+                $scope.gpsText = "Starta Gps";
+            }
+        };
+
         $scope.init();
     }])
 
-.controller('AppController', ['$scope', '$rootScope', 'geolocationService', '$http', '$interval', '$timeout', 'settings', '$location', '$q',
-    function ($scope, $rootScope, geolocationService, $http, $interval, $timeout, settings, $location, $q) {
-        var msgTimer;
+.controller('AppController', ['$scope', '$rootScope', 'geolocationService', 'unitService', '$http', '$interval', '$timeout', 'settings', '$location',
+    function ($scope, $rootScope, geolocationService, unitService, $http, $interval, $timeout, settings, $location) {
         $scope.init = function () {
             $scope.user = settings.GetUser();
             $scope.getNewLocation(0);
@@ -116,20 +127,14 @@
         $scope.lng = [];
         $scope.spd = [];
         $scope.speedTimes = [];
-
-        $scope.Count = 0;
-        $scope.Position;
+        
         $scope.getGeolocation = function () {
             geolocationService.getGeolocation()
                 .then(
                 function (position) {
                     //success
-                    $scope.Count++;
-                    $scope.Time = position.timestamp;                    
-
                     var lat = position.coords.latitude;
                     var lng = position.coords.longitude;
-                    var spd = position.coords.speed;                    
 
                     if ($scope.lat.length >= SIZE) {
                         $scope.lat.splice(0, 1);
@@ -146,12 +151,12 @@
 
                     $scope.lat.push(lat);
                     $scope.lng.push(lng);
-                    $scope.speedTimes.push(position.timestamp)
+                    $scope.speedTimes.push(position.timestamp);
 
                     if ($scope.lat.length >= 2) {
                         var distance = distanceInMeters(
                             $scope.lat[$scope.lat.length - 1], $scope.lng[$scope.lng.length - 1],
-                            $scope.lat[$scope.lat.length - 2], $scope.lng[$scope.lng.length - 2])
+                            $scope.lat[$scope.lat.length - 2], $scope.lng[$scope.lng.length - 2]);
 
                         var timeDiff = $scope.speedTimes[$scope.speedTimes.length - 1] - $scope.speedTimes[$scope.speedTimes.length -2];
                         
@@ -160,16 +165,12 @@
                     }
                     else
                         $scope.spd.push(-1);
-
-                    $scope.Position = "lat: " + lat + " long: " + lng;
                     return geolocationService.sendLocation($scope.lat, $scope.lng, $scope.spd);                    
                 },
                 function (data) {
                     //error
-                    return $q.reject(data);
                 })
                 .then(function (result) {
-                    $scope.Info = 'interval: ' + result.interval + ' isParked:' + result.isParked + ' checkSpeed:' + result.checkSpeed;
                     $scope.getNewLocation(result.interval);
                 },
                 function (data) {
@@ -191,16 +192,17 @@
             var c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
             var d = R * c; // Distance in km
             return d * 1000;
-        }
+        };
 
         function deg2rad(deg) {
-            return deg * (Math.PI / 180)
-        }
+            return deg * (Math.PI / 180);
+        };
 
         var stop;
         $scope.getNewLocation = function (interval) {
             var id = settings.GetId();
-            if (!angular.isDefined(id) || id === null)
+            var gps = settings.GetGps();
+            if (!angular.isDefined(id) || id === null || !gps)
                 return;
             if (angular.isDefined(stop)) {
                 $timeout.cancel(stop);
@@ -226,29 +228,66 @@
             $scope.user = args.user;
         });
 
-        $scope.closeAlert = function (index) {
+        $scope.closeAlert = function(index) {
             $scope.alerts.splice(index, 1);
-        }
+        };
 
-        $scope.isReversible = function () {
+        $scope.isReversible = function() {
             return $location.path() === "/";
-        }
+        };
 
-        $scope.parkManually = function () {
+        $scope.toggleGps = function () {
+            var gps = !settings.GetGps();
+            settings.SetGps(gps);
+            if (!gps) {
+                $scope.stopGps();
+            } else {
+                $scope.startGps();
+            }
+        };
+
+        $scope.stopGps = function () {
+            if (angular.isDefined(stop)) {
+                $timeout.cancel(stop);
+                stop = undefined;
+            }
+        };
+
+        $scope.startGps = function() {
+            $scope.getNewLocation(0);
+        };
+
+        $scope.parkManually = function() {
             var location = $location.path().split("/");
             var index = location[location.length - 1];
             unitService.parkManually(index).
-            then(function (result) {
-                $scope.alerts = [{ type: "success", msg: "Du har parkerats" }];
-                $timeout(function () {
-                    $scope.alerts = [];
-                }, 2000);
-            }, function (err) {
-                $scope.alerts = [{ type: "danger", msg: "Det gick inte att manuellt parkera bilen." }];
-                $timeout(function () {
-                    $scope.alerts = [];
-                }, 2000);
-            });
-        }
+                then(function(result) {
+                    $scope.alerts = [{ type: "success", msg: "Du har parkerats" }];
+                    $timeout(function() {
+                        $scope.alerts = [];
+                    }, 2000);
+                }, function(err) {
+                    $scope.alerts = [{ type: "danger", msg: "Det gick inte att manuellt parkera bilen." }];
+                    $timeout(function() {
+                        $scope.alerts = [];
+                    }, 2000);
+                });
+        };
+
+        $scope.unparkManually = function () {
+            unitService.unparkManually().
+                then(function (result) {
+                    $scope.alerts = [{ type: "success", msg: "Du har avparkerats" }];
+                    $timeout(function () {
+                        $scope.alerts = [];
+                    }, 2000);
+                }, function (err) {
+                    $scope.alerts = [{ type: "danger", msg: "Det gick inte att manuellt av parkera bilen." }];
+                    $timeout(function () {
+                        $scope.alerts = [];
+                    }, 2000);
+                });
+        };
+        
         $scope.init();
     }]);
