@@ -147,7 +147,6 @@
                 url: settings.host + 'api/Unit/'
             })
             .success(function (result) {
-                debugger;
                 if (!result.success) {
                     defer.reject(result.message);
                 }
