@@ -70,6 +70,7 @@
         $scope.init = function () {
             if (settings.GetUser() !== undefined) {
                 $scope.unit.Name = settings.GetUser();
+                debugger;
                 $scope.unit.Phonenumber = settings.GetNumber();
             }
         }
