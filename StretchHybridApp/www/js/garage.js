@@ -220,5 +220,3 @@ garageApp
 
         $scope.init();
     }]);
-
-$(document).ready(function () { });
