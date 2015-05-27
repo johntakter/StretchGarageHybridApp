@@ -6,46 +6,48 @@
         <meta name="msapplication-tap-highlight" content="no" />
         <!-- WARNING: for iOS 7, remove the width=device-width and height=device-height attributes. See https://issues.apache.org/jira/browse/CB-4323 -->
         <meta name="viewport" content="user-scalable=no, initial-scale=1, maximum-scale=1, minimum-scale=1, width=device-width, height=device-height, target-densitydpi=medium-dpi" />
-        <link rel="stylesheet" type="text/css" href="css/bootstrap.css" />
         <link rel="stylesheet" type="text/css" href="css/bootstrap.min.css" />
         <link rel="stylesheet" type="text/css" href="css/Site.css" />
-        
         <title>Stretch Garage</title>
-        <script type="text/javascript" charset="utf-8" src="js/jquery-1.10.2.min.js"></script>
-        <script type="text/javascript" charset="utf-8" src="js/jquery-1.10.2.min.map"></script>
-
-        <script type="text/javascript" charset="utf-8" src="js/bootstrap.min.js"></script>
-
         <script type="text/javascript" charset="utf-8" src="js/angular.min.js"></script>
         <script type="text/javascript" charset="utf-8" src="js/angular.min.js.map"></script>
-        <script type="text/javascript" charset="utf-8" src="js/angular-animate.min.js"></script>
-        <script type="text/javascript" charset="utf-8" src="js/angular-animate.min.js.map"></script>
         <script type="text/javascript" charset="utf-8" src="js/angular-route.min.js"></script>
         <script type="text/javascript" charset="utf-8" src="js/angular-route.min.js.map"></script>   
-
-
+            
         <script type="text/javascript" charset="utf-8" src="js/router.js"></script>
         <script type="text/javascript" charset="utf-8" src="js/garage.js"></script>
         <script type="text/javascript" charset="utf-8" src="js/services.js"></script>        
     </head>
     <body id="controller" ng-controller="AppController">
-        <div id="message" ng-click="close('message')" class="alert" ng-show="Messages">
-            <ul>
-                <li ng-repeat="m in Messages">
-                    <div>{{m.Message}}</div>
+        <div id="navbar">
+            <ul class="bar">
+                <li>
+                    <button class="btn btn-primary" onclick="history.go(-1)" ng-disabled="isReversible()"><i class="glyphicon glyphicon-chevron-left"></i> Backa</button>
+                </li>
+                <li ng-if="user">
+                    <div class="btn-group dropup" dropdown>
+                        <button type="button" class="btn btn-primary">{{user}}</button>
+                        <button type="button" class="btn btn-primary dropup-toggle" dropdown-toggle>
+                            <span class="caret"></span>
+                            <span class="sr-only">Split button!</span>
+                        </button>
+                        <ul class="dropdown-menu" role="menu">
+                            <li><a href="#/CreateUnit">Profil</a></li>
+                            <li class="divider"></li>
+                            <li><a href="" ng-click="parkManually()">Manuell parkering</a></li>
+                            <li><a href="" ng-click="unparkManually()" >Manuell avparkering</a></li>
+                        </ul>
+                    </div>
                 </li>
             </ul>
         </div>
+        <alert ng-repeat="alert in alerts" type="{{alert.type}}" close="closeAlert($index)">{{alert.msg}}</alert>
         <div class="container box" ng-view>
         </div>
         <div class="footer">
             <p>G. Hedman, J. Takter, N. Frank</p>
             <p>© Stretch Garage</p>
         </div>
-        <div>{{Count}}</div>
-        <div>{{Time}}</div>
-        <div>{{Position}}</div>
-        <div>{{Info}}</div>
         
         <script type="text/javascript" charset="utf-8" src="cordova.js"></script>
         <script>
