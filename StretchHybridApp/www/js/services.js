@@ -126,7 +126,8 @@
             };
     
             return parkingPlace;
-    }])
+        }])
+
     .service("unitService", ['$http', 'settings', '$q',
         function unitService($http, settings, $q) {
             var unit = this;
@@ -158,7 +159,7 @@
                 .error(function (err) {
                     defer.reject(err);
                 });
-    
+
                 return defer.promise;
             };
             

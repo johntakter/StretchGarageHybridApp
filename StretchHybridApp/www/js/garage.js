@@ -1,12 +1,10 @@
-﻿/* global $ */
-/* global angular */
-garageApp
+﻿garageApp
 
 .controller('ParkingPlaceCtrl', ['$scope', 'parkingPlaces',
     function ($scope, parkingPlaces) {
         $scope.init = function () {
             $scope.getAllParkingPlaces();
-        };
+        }
 
         $scope.getAllParkingPlaces = function () {
             parkingPlaces.GetAllParkingPlaces()
@@ -17,9 +15,11 @@ garageApp
                 },
                 function (data) {
                     //error
-                    $scope.ShowMessage(data, 2000);
+                    $scope.$emit('alert', [
+                        { type: "danger", msg: data, }
+                    ]);
                 });
-        };
+        }
 
         $scope.init();
     }])
@@ -36,7 +36,7 @@ garageApp
                     $scope.getParkingPlace();
                 }, 7000);
             });
-        };
+        }
 
         $scope.ParkingPlaces = {};
 
@@ -49,9 +49,11 @@ garageApp
                 },
                 function (data) {
                     //error
-                    $scope.ShowMessage(data, 2000);
+                    $scope.$emit('alert', [
+                        { type: "danger", msg: data, }
+                    ]);
                 });
-        };
+        }
 
         $scope.$on('$destroy', function () {
             if (angular.isDefined(stop)) {
@@ -63,18 +65,40 @@ garageApp
         $scope.init();
     }])
 
-.controller('UnitCtrl', ['$scope', 'settings', 'unitService', '$location',
-    function ($scope, settings, unitService, $location) {
-        if (settings.Id() !== undefined) {
-            $scope.UnitName = settings.Id();
+.controller('UnitCtrl', ['$scope', 'settings', 'unitService', '$location', '$timeout',
+    function ($scope, settings, unitService, $location, $timeout) {
+        $scope.init = function () {
+            if (settings.GetUser() !== undefined) {
+                $scope.unit.Name = settings.GetUser();
+                debugger;
+                $scope.unit.Phonenumber = settings.GetNumber();
+            }
         }
 
-        $scope.submit = function () {
-            unitService.createUnit($scope.UnitName)
-            .then(function() {
-                $location.path("/");
-            });
+        $scope.unit = {};
+
+        $scope.submit = function (isValid) {
+            if (!isValid) return;
+            var id = settings.GetId();
+            if (!angular.isDefined(id)) {
+                unitService.putUnit(settings.GetId(), $scope.unit, settings.GetType()).
+                then(function () {
+                    $scope.$emit('alert', [
+                        { type: "success", msg: "Din profil har uppdaterats!", }
+                    ]);
+                    $timeout(function () {
+                        $location.path("/");
+                    }, 2000);
+                });
+            } else {
+                unitService.createUnit($scope.unit)
+                .then(function () {
+                    $location.path("/");
+                });
+            }
         };
+
+        $scope.init();
     }])
 
 .controller('AppController', ['$scope', '$rootScope', 'geolocationService', 'unitService', '$http', '$interval', '$timeout', 'settings', '$location',
@@ -90,7 +114,8 @@ garageApp
         $scope.lat = [];
         $scope.lng = [];
         $scope.spd = [];
-
+        $scope.speedTimes = [];
+        
         $scope.getGeolocation = function () {
             geolocationService.getGeolocation()
                 .then(
@@ -98,7 +123,6 @@ garageApp
                     //success
                     var lat = position.coords.latitude;
                     var lng = position.coords.longitude;
-                    var spd = position.coords.speed;
 
                     if ($scope.lat.length >= SIZE) {
                         $scope.lat.splice(0, 1);
@@ -109,16 +133,27 @@ garageApp
                     if ($scope.spd.length >= SIZE) {
                         $scope.spd.splice(0, 1);
                     }
+                    if ($scope.speedTimes.length >= SIZE) {
+                        $scope.speedTimes.splice(0, 1);
+                    }
 
                     $scope.lat.push(lat);
                     $scope.lng.push(lng);
+                    $scope.speedTimes.push(position.timestamp);
 
-                    if (angular.isDefined(spd) || spd <= 10)
-                        $scope.spd.push(-1);
+                    if ($scope.lat.length >= 2) {
+                        var distance = distanceInMeters(
+                            $scope.lat[$scope.lat.length - 1], $scope.lng[$scope.lng.length - 1],
+                            $scope.lat[$scope.lat.length - 2], $scope.lng[$scope.lng.length - 2]);
+
+                        var timeDiff = $scope.speedTimes[$scope.speedTimes.length - 1] - $scope.speedTimes[$scope.speedTimes.length -2];
+                        
+                        var speed = distance / timeDiff;
+                        $scope.spd.push(speed);
+                    }
                     else
-                        $scope.spd.push(spd);
-
-                    return geolocationService.sendLocation($scope.lat, $scope.lng, $scope.spd);
+                        $scope.spd.push(-1);
+                    return geolocationService.sendLocation($scope.lat, $scope.lng, $scope.spd);                    
                 },
                 function (data) {
                     //error
@@ -128,7 +163,27 @@ garageApp
                 },
                 function (data) {
                     //error
+                    $scope.Info = "failed to update location";
+                    $scope.getNewLocation(2000);
                 });
+        };
+
+        function distanceInMeters(lat1, lon1, lat2, lon2) {
+            var R = 6371; // Radius of the earth in km
+            var dLat = deg2rad(lat2 - lat1);  // deg2rad below
+            var dLon = deg2rad(lon2 - lon1);
+            var a =
+              Math.sin(dLat / 2) * Math.sin(dLat / 2) +
+              Math.cos(deg2rad(lat1)) * Math.cos(deg2rad(lat2)) *
+              Math.sin(dLon / 2) * Math.sin(dLon / 2)
+            ;
+            var c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+            var d = R * c; // Distance in km
+            return d * 1000;
+        };
+
+        function deg2rad(deg) {
+            return deg * (Math.PI / 180);
         };
 
         var stop;
@@ -137,6 +192,10 @@ garageApp
             var gps = settings.GetGps();
             if (!angular.isDefined(id) || id === null || !gps)
                 return;
+            if (angular.isDefined(stop)) {
+                $timeout.cancel(stop);
+                stop = undefined;
+            }
             stop = $timeout(function () {
                 $scope.getGeolocation();
             }, interval);
@@ -217,6 +276,6 @@ garageApp
                     }, 2000);
                 });
         };
-
+        
         $scope.init();
     }]);
