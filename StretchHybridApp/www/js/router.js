@@ -6,6 +6,7 @@
                 when('/ParkingPlace/', { templateUrl: 'partials/parkingplacelist.html', controller: 'ParkingPlaceCtrl' }).
                 when('/ParkingPlace/:id', { templateUrl: 'partials/parkingplacedetail.html', controller: 'ParkingDetailCtrl' }).
                 when('/CreateUnit', { templateUrl: 'partials/unit.html', controller: 'UnitCtrl' }).
+                when('/Help', { templateUrl: 'partials/help.html' }).
                 otherwise({
                     redirectTo: '/'
                 });
