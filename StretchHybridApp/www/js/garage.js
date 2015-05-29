@@ -127,6 +127,9 @@
         $scope.lng = [];
         $scope.spd = [];
         $scope.speedTimes = [];
+        $scope.staticLat = -1;
+        $scope.staticLng = -1;
+        $scope.staticTime = -1;
         
         $scope.getGeolocation = function () {
             geolocationService.getGeolocation()
@@ -165,10 +168,19 @@
                     }
                     else
                         $scope.spd.push(-1);
+                        
+                    
+                    if ($scope.lat.length >= 2) {
+                        var interval = checkStaticPosition($scope.spd, position.timestamp);
+                        if (interval > -1) {
+                            return {checkSpeed: true, interval: interval, isParked: false};
+                        }
+                    }                    
                     return geolocationService.sendLocation($scope.lat, $scope.lng, $scope.spd);                    
                 },
                 function (data) {
                     //error
+                    $scope.getNewLocation(5000);
                 })
                 .then(function (result) {
                     $scope.getNewLocation(result.interval);
@@ -197,6 +209,57 @@
         function deg2rad(deg) {
             return deg * (Math.PI / 180);
         };
+        
+        function checkStaticPosition(speedArr, timestamp) {
+
+            var moved = checkStationary(speedArr)
+
+            if (moved) {
+                $scope.staticTime = $scope.staticLat = $scope.staticLng = -1;
+                return -1;
+            }
+            
+            if ($scope.staticTime === -1) {
+                $scope.staticLat = $scope.lat[$scope.lat.length - 1];
+                $scope.staticLng = $scope.lng[$scope.lng.length - 1];
+                $scope.staticTime = timestamp;
+                return -1;
+            }
+
+            var timeDiff = timestamp - $scope.staticTime;
+            if (timeDiff < 300)
+                return -1;
+
+            var distanceMoved = distanceInMeters(
+                $scope.lat[$scope.lat.length - 1],
+                $scope.lng[$scope.lng.length - 1],
+                $scope.lat[$scope.lat.length - 2],
+                $scope.lng[$scope.lng.length - 2]);
+
+            
+            if (distanceMoved > 20) //Not moved more than 20 meters
+            {
+                $scope.staticLat = $scope.lat[$scope.lat.length - 1];
+                $scope.staticLng = $scope.lng[$scope.lng.length - 1];
+                $scope.staticTime = timestamp;
+                return -1;
+            }
+
+            return 150000; //2.30 minutes
+
+                        
+        }
+        function checkStationary(speedArr) {
+            var moved = false;
+            for (var i = 0; i < speedArr.length; i++) {
+                if (speedArr[i] > 2) {
+                    moved = true;
+                    break;
+                }
+            }
+
+            return moved;
+        }
 
         var stop;
         $scope.getNewLocation = function (interval) {

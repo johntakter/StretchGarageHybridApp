@@ -74,11 +74,12 @@
                     headers += "&longitude[]=" + lng[i];
                     headers += "&speed[]=" + spd[i];
                 }
-                return $http.get(settings.host + 'api/CheckLocation/' + headers).
+                return $http.get(settings.host + 'api/CheckLocation/' + headers, { timeout: 30000 }).
                 then(function (result) {
                     return result.data.content;
                 },
                 function (err) {
+                    return { checkSpeed: true, interval: 5000, isParked: false };
                 });
             };
 

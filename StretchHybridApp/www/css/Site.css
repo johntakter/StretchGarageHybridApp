@@ -117,7 +117,7 @@ div.spot-red {
     background-repeat: no-repeat;
     -ms-background-size: cover;
     background-size: cover;
-    background: url("img/cars.png");
+    background: url("../img/cars.png");
 }
 
 .car-green::before {
