@@ -27,14 +27,16 @@
                     <div class="btn-group dropup" dropdown>
                         <button type="button" class="btn btn-primary">{{user}}</button>
                         <button type="button" class="btn btn-primary dropup-toggle" dropdown-toggle>
-                            <span class="caret"></span>
+                            <span class="glyphicon glyphicon-align-justify"></span>
                             <span class="sr-only">Split button!</span>
                         </button>
                         <ul class="dropdown-menu" role="menu">
-                            <li><a href="#/CreateUnit">Profil</a></li>
+                            <li><a href="#/Help"><span class="glyphicon glyphicon-question-sign"></span>Hjälp</a></li>
                             <li class="divider"></li>
-                            <li><a href="" ng-click="parkManually()">Manuell parkering</a></li>
-                            <li><a href="" ng-click="unparkManually()" >Manuell avparkering</a></li>
+                            <li><a href="#/CreateUnit"><span class="glyphicon glyphicon-user"></span>Profil</a></li>
+                            <li class="divider"></li>
+                            <li><a href="" ng-click="parkManually()"><span class="glyphicon glyphicon-plus"></span>Manuell parkering</a></li>
+                            <li><a href="" ng-click="unparkManually()"><span class="glyphicon glyphicon-minus"></span>Manuell avparkering</a></li>
                         </ul>
                     </div>
                 </li>
